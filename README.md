@@ -80,6 +80,37 @@ src/
 └── index.css                     # Tailwind imports, theme variables, fonts
 ```
 
+## Key Patterns
+
+### API Layer
+
+Each endpoint follows the same factory pattern:
+
+```ts
+export const getSpending = () => {
+  const request = (params?) =>
+    api<Response>("/spending", { method: "GET", params });
+  const resolver = (response) => response.data;
+  const errorResolver = (response) =>
+    response.status !== "success" ? { message } : null;
+  return { request, resolver, abort, errorResolver };
+};
+```
+
+This keeps request logic, data extraction, and error checking co-located per endpoint. The `useRequest` hook consumes this pattern generically.
+
+### useRequest Hook
+
+Generic hook that manages `data`, `error`, `fetching`, and `pending` states for any API call. Supports `onSuccess` and `onError` callbacks. Handles request abort on re-execution to prevent stale responses.
+
+### Presets as Constants
+
+Frontend mirrors the backend preset values (categories, signal types, billing cycles, confidence levels) in `constants/presets.ts`. These drive filter dropdowns, badge styles, and label mappings. Ideally these would come from a backend `GET /api/presets` endpoint, but for now they are hardcoded to match.
+
+### React Compiler
+
+Using `babel-plugin-react-compiler` via Vite's Babel plugin. This means no manual `useCallback` or `useMemo` needed in the codebase. The compiler handles memoization automatically, which keeps component code cleaner.
+
 ## Setup
 
 ### Prerequisites
@@ -119,6 +150,26 @@ pnpm lint:type      # TypeScript type checking
 pnpm lint:code      # ESLint
 pnpm format:all     # Prettier format all files
 ```
+
+## CI/CD
+
+### Git Hooks (pre-commit)
+
+Pre-commit hooks via Husky run automatically before each commit:
+
+- TypeScript type checking
+- ESLint code linting
+- Prettier formatting via `pretty-quick` (staged files only)
+
+### Continuous Integration
+
+GitHub Actions runs on every pull request to `main`:
+
+- Type checking (`pnpm lint:type`)
+- Code linting (`pnpm lint:code`)
+- Format checking (`pnpm format`)
+
+Each job runs in parallel with a shared environment setup action that handles Node.js (from `.node-version`), pnpm, and dependency install. Concurrent runs for the same PR are cancelled automatically.
 
 ## What I Would Improve Given More Time
 
