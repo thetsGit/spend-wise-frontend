@@ -40,7 +40,6 @@ export function useRequest<TPayload, TResponse, TResult, TError>(
         const errorData = errorResolver(response);
         if (errorData) {
           setError(errorData);
-          options?.onError?.(errorData, payload);
           throw errorData as TError;
         }
 

@@ -1,20 +1,17 @@
 import type { TResponse, TErrorData } from "@/types/api";
-import type { Spending, SpendingSummary } from "@/types/entities";
+import type { SaaSDiscovery, SaaSDiscoverySummary } from "@/types/entities";
 
-import type { GetSpendingParams } from "./types";
+import api from "./api-client";
 
-import api from "./api";
-
-export const getSpending = () => {
-  type Response = TResponse<Spending[]>;
+export const getSaaSDiscoveries = () => {
+  type Response = TResponse<SaaSDiscovery[]>;
   let abortController: AbortController;
 
-  const request = (params?: GetSpendingParams) => {
+  const request = () => {
     abortController = new AbortController();
-    return api<Response>("/spending", {
+    return api<Response>("/saas", {
       method: "GET",
       signal: abortController.signal,
-      params,
     });
   };
 
@@ -31,13 +28,13 @@ export const getSpending = () => {
   return { request, resolver, abort, errorResolver };
 };
 
-export const getSpendingSummary = () => {
-  type Response = TResponse<SpendingSummary>;
+export const getSaaSDiscoverySummary = () => {
+  type Response = TResponse<SaaSDiscoverySummary>;
   let abortController: AbortController;
 
   const request = () => {
     abortController = new AbortController();
-    return api<Response>("/spending/summary", {
+    return api<Response>("/saas/summary", {
       method: "GET",
       signal: abortController.signal,
     });

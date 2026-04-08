@@ -1,27 +1,28 @@
-import { Button } from "@/components/ui/button";
-import { useRequest } from "@/hooks";
-import { getSaaSDiscoverySummary } from "@/services/saas-services";
-import { useEffect } from "react";
+import { useState } from "react";
+import { Toaster } from "sonner";
 
-function App() {
-  const { execute, pending } = useRequest(getSaaSDiscoverySummary);
+import { VIEWS, NAV_ITEMS, type View } from "@/constants/views";
 
-  useEffect(() => {
-    execute({});
-  }, []);
+import { HomeView } from "@/views/HomeView";
+import { SpendingView } from "@/views/SpendingView";
+import { SaaSView } from "@/views/SaaSView";
+
+import { AppLayout } from "@/components/layout";
+
+export default function App() {
+  const [view, setView] = useState<View>(VIEWS.home);
 
   return (
     <>
-      {pending ? (
-        <p>loading...</p>
-      ) : (
-        <>
-          <p className="text-blue-500 font-bold">Hello world</p>
-          <Button>hello</Button>
-        </>
-      )}
+      <Toaster richColors />
+
+      <AppLayout activeView={view} navItems={NAV_ITEMS} onSelect={setView}>
+        {view === VIEWS.home && (
+          <HomeView key={VIEWS.home} onSelect={setView} />
+        )}
+        {view === VIEWS.spending && <SpendingView key={VIEWS.spending} />}
+        {view === VIEWS.saas && <SaaSView key={VIEWS.saas} />}
+      </AppLayout>
     </>
   );
 }
-
-export default App;

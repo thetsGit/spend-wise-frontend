@@ -1,10 +1,6 @@
 import { ofetch } from "ofetch";
 
-import {
-  APP_SERVICE_URL,
-  RETRY_COUNT,
-  RETRY_DELAY,
-} from "@/services/constants";
+import { APP_SERVICE_URL, RETRY_COUNT, RETRY_DELAY } from "@/api/constants";
 
 export const api = ofetch.create({
   baseURL: `${APP_SERVICE_URL}/api`,

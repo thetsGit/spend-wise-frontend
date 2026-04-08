@@ -1,7 +1,7 @@
 import type { TErrorData, TResponse } from "@/types/api";
 import type { UploadSummary } from "@/types/entities";
 
-import api from "./api";
+import api from "./api-client";
 
 export const uploadEmails = () => {
   type Payload = File;
