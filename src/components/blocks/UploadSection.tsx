@@ -29,7 +29,9 @@ export const UploadSection: FC<Props> = ({ onSuccess }) => {
       }
     },
     onError: (err) => {
-      console.log({ err });
+      if (fileInputRef?.current) {
+        fileInputRef.current.value = "";
+      }
       toast.error("Upload failed", {
         description: (err as Error).message,
       });
