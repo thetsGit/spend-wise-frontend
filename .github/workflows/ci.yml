@@ -1,0 +1,42 @@
+name: CI
+on:
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint-type:
+    name: Type checking
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Environment Prepare
+        uses: ./.github/workflows/environment-prepare
+      - name: Run typescript check
+        run: pnpm lint:type
+
+  lint-code:
+    name: Code checking
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Environment Prepare
+        uses: ./.github/workflows/environment-prepare
+      - name: Run lint
+        run: pnpm lint:code
+
+  format-check:
+    name: Format checking
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Environment Prepare
+        uses: ./.github/workflows/environment-prepare
+      - name: Run format check
+        run: pnpm format
