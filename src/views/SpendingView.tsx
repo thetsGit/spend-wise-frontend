@@ -76,7 +76,10 @@ export function SpendingView() {
   };
 
   const hasFilters = category !== "all" || startDate || endDate;
-  const topCategory = summary.data?.by_category?.[0];
+  const topCategory = summary.data?.by_category.sort(
+    // Rank category by total_count in desc order
+    (c1, c2) => c2.total_count - c1.total_count,
+  )[0];
 
   return (
     <div className="space-y-6">
