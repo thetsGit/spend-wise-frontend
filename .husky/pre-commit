@@ -1,0 +1,3 @@
+pnpm lint:type
+pnpm lint:code
+pnpm format
