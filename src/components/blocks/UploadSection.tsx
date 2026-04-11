@@ -19,22 +19,29 @@ export const UploadSection: FC<Props> = ({ onSuccess }) => {
   const [dragging, setDragging] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  const onUploadProcessed = () => {
+    if (fileInputRef?.current) {
+      fileInputRef.current.value = "";
+    }
+  };
+
   const upload = useRequest(uploadEmails, {
     onSuccess: (data) => {
       if (data) {
         toast.success("Upload complete", {
-          description: `${data.inserted} emails processed, ${data.spending_found} transactions, ${data.saas_found} SaaS tools found`,
+          description: `${data.inserted} emails processed, ${data.skipped} skipped, ${data.invalid} are invalid, ${data.spending_found} transactions, ${data.saas_found} SaaS tools found`,
         });
         onSuccess();
       }
+
+      onUploadProcessed();
     },
     onError: (err) => {
-      if (fileInputRef?.current) {
-        fileInputRef.current.value = "";
-      }
       toast.error("Upload failed", {
         description: (err as Error).message,
       });
+
+      onUploadProcessed();
     },
   });
 
@@ -131,6 +138,7 @@ export const UploadSection: FC<Props> = ({ onSuccess }) => {
             <div className="mt-2 flex flex-wrap gap-4 text-xs text-emerald-700">
               <span>{upload.data.total_emails} emails</span>
               <span>{upload.data.inserted} inserted</span>
+              <span>{upload.data.invalid} invalid</span>
               <span>{upload.data.skipped} skipped</span>
               <span>{upload.data.spending_found} transactions</span>
               <span>{upload.data.saas_found} SaaS tools</span>

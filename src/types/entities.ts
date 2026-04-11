@@ -45,6 +45,7 @@ export type UploadSummary = {
   total_emails: number;
   inserted: number;
   skipped: number;
+  invalid: number;
   spending_found: number;
   saas_found: number;
 };
