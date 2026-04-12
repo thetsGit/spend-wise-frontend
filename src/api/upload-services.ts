@@ -4,17 +4,15 @@ import type { UploadSummary } from "@/types/entities";
 import api from "./api-client";
 
 export const uploadEmails = () => {
-  type Payload = File;
   type Response = TResponse<UploadSummary>;
   let abortController: AbortController;
 
-  const request = async (payload: Payload) => {
+  const request = async (payload: string) => {
     abortController = new AbortController();
-    const text = await payload.text();
     return api<Response>("/emails/upload", {
       method: "POST",
       signal: abortController.signal,
-      body: text,
+      body: payload,
     });
   };
 
