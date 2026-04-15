@@ -125,7 +125,8 @@ Using `babel-plugin-react-compiler` via Vite's Babel plugin. This means no manua
 Create a `.env` file:
 
 ```env
-VITE_API_URL=http://localhost:8000
+VITE_APP_API_URL=http://localhost:8000
+VITE_OAUTH_API_URL=https://oauth2.googleapis.com
 ```
 
 ### Install and Run

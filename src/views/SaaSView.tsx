@@ -8,7 +8,7 @@ import { useRequest } from "@/hooks/useRequest";
 import {
   getSaaSDiscoveries,
   getSaaSDiscoverySummary,
-} from "@/api/saas-services";
+} from "@/api/app-services";
 
 import {
   SIGNAL_STYLES,

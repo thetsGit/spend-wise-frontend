@@ -8,7 +8,7 @@ import { parseCSV } from "@/helpers/csv";
 
 import { useRequest } from "@/hooks";
 
-import { uploadEmails } from "@/api/upload-services";
+import { uploadEmails } from "@/api/app-services";
 
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";

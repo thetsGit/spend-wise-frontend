@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils";
 
 import { useRequest } from "@/hooks/useRequest";
 
-import { getSpending, getSpendingSummary } from "@/api/spending-services";
+import { getSpending, getSpendingSummary } from "@/api/app-services";
 
 import {
   CATEGORIES,

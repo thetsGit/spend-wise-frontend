@@ -4,8 +4,10 @@ import { useNavigate } from "@tanstack/react-router";
 
 import { useRequest } from "@/hooks/useRequest";
 
-import { getSpendingSummary } from "@/api/spending-services";
-import { getSaaSDiscoverySummary } from "@/api/saas-services";
+import {
+  getSpendingSummary,
+  getSaaSDiscoverySummary,
+} from "@/api/app-services";
 
 import { UploadSection } from "@/components/blocks";
 
