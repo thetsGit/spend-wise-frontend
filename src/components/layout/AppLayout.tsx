@@ -1,30 +1,28 @@
-import { type FC, type ReactNode } from "react";
+import { type ReactNode } from "react";
 import type { LucideIcon } from "lucide-react";
-
-import { type View } from "@/constants/views";
 
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 
-type NavItem = {
-  key: View;
+export type NavItem<T extends string> = {
+  key: T;
   label: string;
   icon: LucideIcon;
 };
 
-type Props = {
+type Props<T extends string> = {
   children: ReactNode;
-  activeView: View;
-  navItems: NavItem[];
-  onSelect: (view: View) => void;
+  activeView: string;
+  navItems: NavItem<T>[];
+  onSelect: (view: string) => void;
 };
 
-export const AppLayout: FC<Props> = ({
+export const AppLayout = <T extends string>({
   children,
   activeView,
   navItems,
   onSelect,
-}) => {
+}: Props<T>) => {
   return (
     <div className="flex h-screen">
       <aside className="flex w-56 flex-col border-r bg-white">

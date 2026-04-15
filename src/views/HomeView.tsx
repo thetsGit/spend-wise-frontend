@@ -1,7 +1,6 @@
 import { useEffect } from "react";
 import { CreditCard, Search, TrendingUp, Layers } from "lucide-react";
-
-import { type View } from "@/constants/views";
+import { useNavigate } from "@tanstack/react-router";
 
 import { useRequest } from "@/hooks/useRequest";
 
@@ -15,11 +14,9 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 
-type Props = {
-  onSelect: (view: View) => void;
-};
+export function HomeView() {
+  const navigate = useNavigate();
 
-export function HomeView({ onSelect }: Props) {
   const spending = useRequest(getSpendingSummary);
   const saas = useRequest(getSaaSDiscoverySummary);
 
@@ -51,7 +48,7 @@ export function HomeView({ onSelect }: Props) {
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <Card
           className="cursor-pointer transition-all hover:shadow-md hover:border-emerald-200"
-          onClick={() => onSelect("spending")}
+          onClick={() => navigate({ to: "/spending" })}
         >
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">
@@ -95,7 +92,7 @@ export function HomeView({ onSelect }: Props) {
 
         <Card
           className="cursor-pointer transition-all hover:shadow-md hover:border-emerald-200"
-          onClick={() => onSelect("saas")}
+          onClick={() => navigate({ to: "/saas" })}
         >
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">
@@ -113,13 +110,15 @@ export function HomeView({ onSelect }: Props) {
                     ? `$${saas.data.total_monthly_spend.toFixed(2)}/mo`
                     : "—"}
                 </p>
-                <Badge
-                  variant="secondary"
-                  className="mt-2 bg-emerald-50 text-emerald-700"
-                >
-                  <Layers size={12} className="mr-1" />
-                  {saas.data?.total_tools_found || 0} tools detected
-                </Badge>
+                <div>
+                  <Badge
+                    variant="secondary"
+                    className="mt-2 bg-emerald-50 text-emerald-700"
+                  >
+                    <Layers size={12} className="mr-1" />
+                    {saas.data?.total_tools_found || 0} tools detected
+                  </Badge>
+                </div>
               </>
             )}
             <Button variant="link" className="mt-3 h-auto p-0 text-emerald-700">
