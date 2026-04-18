@@ -5,7 +5,7 @@ import {
   redirect,
 } from "@tanstack/react-router";
 
-import { isAuthenticated as reactiveIsAuthenticated } from "@/states/oauth";
+import { isAuthenticated as rIsAuthenticated } from "@/states/oauth";
 
 import { useSignal } from "@/hooks";
 
@@ -22,7 +22,7 @@ export const Route = createFileRoute("/auth")({
 });
 
 function RouteComponent() {
-  const isAuthenticated = useSignal(reactiveIsAuthenticated);
+  const isAuthenticated = useSignal(rIsAuthenticated);
 
   if (isAuthenticated) {
     return <Navigate to="/home" />;

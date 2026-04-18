@@ -1,7 +1,7 @@
 import pkceChallenge from "pkce-challenge";
-import { computed, signal } from "@preact/signals-core";
+import { batch, computed, signal } from "@preact/signals-core";
 
-import type { OauthTokenResponse } from "@/types/oauth";
+import type { OauthTokenResponse } from "@/api/types";
 
 import {
   OAUTH_AUTH_URL,
@@ -13,6 +13,7 @@ import {
 } from "@/constants/oauth";
 
 import { exchangeToken as exchangeTokenService } from "@/api/oauth-services";
+import { verifyOauth } from "@/api/app-services";
 
 type AccessToken = string;
 type CodeVerifier = string;
@@ -32,14 +33,6 @@ const deletePersistedAccessToken = () =>
 const deletePersistedCodeVerifier = () =>
   localStorage.removeItem(CODE_VERIFIER_KEY);
 
-// isAuthenticated
-// redirect (method)
-// code challenge, code verifier (session storage)
-//
-// jwt (local storage)
-// isExchangingCode
-//
-
 /**
  * Signals
  */
@@ -52,8 +45,15 @@ export const codeVerifier = signal<CodeVerifier | undefined>(
   getPersistedCodeVerifier(),
 );
 
+export const authorizationCode = signal<string>();
+
+// Exchange states
 export const exchangeError = signal<string>();
-export const isExchanging = signal(false);
+export const exchanging = signal(false);
+
+// Server verification states
+export const serverVerificationError = signal<string>();
+export const verifyingWithServer = signal(false);
 
 /**
  * Computed/s
@@ -62,8 +62,18 @@ export const isExchanging = signal(false);
 export const isAuthenticated = computed(() => Boolean(accessToken.value));
 
 export const exchangeStates = computed(() => ({
-  error: exchangeError,
-  loading: isExchanging,
+  error: exchangeError.value,
+  loading: exchanging.value,
+}));
+
+export const serverVerificationStates = computed(() => ({
+  error: serverVerificationError.value,
+  loading: verifyingWithServer.value,
+}));
+
+export const authenticateStates = computed(() => ({
+  error: exchangeError.value || serverVerificationError.value,
+  loading: exchanging.value || verifyingWithServer.value,
 }));
 
 /**
@@ -76,14 +86,6 @@ export const setAccessToken = (newToken: AccessToken = "") => {
 
 export const setCodeVerifier = (newCodeVerifier: CodeVerifier = "") => {
   codeVerifier.value = newCodeVerifier;
-};
-
-export const setExchangeError = (newError: string = "") => {
-  exchangeError.value = newError;
-};
-
-export const setIsExchanging = (newIsExchanging: boolean) => {
-  isExchanging.value = newIsExchanging;
 };
 
 /**
@@ -111,13 +113,21 @@ export const redirect = async () => {
   window.location.href = `${OAUTH_AUTH_URL}?${params}`;
 };
 
-export const exchangeToken = async (code: string) => {
-  setIsExchanging(true);
-  setExchangeError();
+export const exchangeToken = async (
+  code: string,
+  onSuccess: (resolved: OauthTokenResponse) => void,
+) => {
+  batch(() => {
+    exchanging.value = true;
+    exchangeError.value = "";
+  });
 
   if (!codeVerifier.value) {
-    setExchangeError("No code verifier found. Please try logging in again.");
-    setIsExchanging(false);
+    batch(() => {
+      exchangeError.value =
+        "No code verifier found. Please try logging in again.";
+      exchanging.value = false;
+    });
     return;
   }
 
@@ -135,52 +145,53 @@ export const exchangeToken = async (code: string) => {
 
     const errorData = errorResolver(response);
     if (errorData) {
-      setExchangeError(errorData.message);
+      exchangeError.value = errorData.message;
+      return;
     }
 
     const resolved = resolver(response) as OauthTokenResponse;
-    // set data
-    // save access token here
-    // later -> call BE api for JWT
 
-    setAccessToken(resolved.access_token);
+    // Call success callback
+    onSuccess(resolved);
 
     // Flush old 'code_verifier'
     setCodeVerifier();
   } catch (err) {
-    setExchangeError(
-      err instanceof Error ? err.message : "Failed to exchange code",
-    );
+    exchangeError.value =
+      err instanceof Error ? err.message : "Failed to exchange code";
   } finally {
-    setIsExchanging(false);
+    exchanging.value = false;
   }
+};
 
-  // // Clean up
-  // sessionStorage.removeItem(CODE_VERIFIER_KEY);
+export const verifyWithServer = async (payload: OauthTokenResponse) => {
+  batch(() => {
+    accessToken.value = ""; // Flush old access token
+    verifyingWithServer.value = true;
+    serverVerificationError.value = "";
+  });
 
-  // // Send Google tokens to our backend
-  // const authResponse = await api<{ data: { token: string; user: User } }>(
-  //   "/api/auth/google",
-  //   {
-  //     method: "POST",
-  //     body: {
-  //       access_token: googleTokens.access_token,
-  //       refresh_token: googleTokens.refresh_token,
-  //       id_token: googleTokens.id_token,
-  //       expires_in: googleTokens.expires_in,
-  //     },
-  //   },
-  // );
+  try {
+    const { request, resolver, errorResolver } = verifyOauth();
 
-  // // Store our JWT
-  // localStorage.setItem(ACCESS_TOKEN_KEY, authResponse.data.token);
+    const response = await request(payload);
 
-  // setState({
-  //   user: authResponse.data.user,
-  //   accessToken: authResponse.data.token,
-  //   isAuthenticated: true,
-  //   isLoading: false,
-  // });
+    const errorData = errorResolver(response);
+    if (errorData) {
+      serverVerificationError.value = errorData.message;
+      return;
+    }
+
+    const resolved = resolver(response);
+
+    // Set new access token
+    setAccessToken(resolved?.session_token);
+  } catch (err) {
+    serverVerificationError.value =
+      err instanceof Error ? err.message : "Failed to verify with server";
+  } finally {
+    verifyingWithServer.value = false;
+  }
 };
 
 /**

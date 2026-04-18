@@ -8,7 +8,7 @@ import {
 
 import { Home, CreditCard, Search } from "lucide-react";
 
-import { isAuthenticated as reactiveIsAuthenticated } from "@/states/oauth";
+import { isAuthenticated as rIsAuthenticated } from "@/states/oauth";
 
 import { useSignal } from "@/hooks";
 
@@ -30,7 +30,7 @@ function RouteComponent() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const isAuthenticated = useSignal(reactiveIsAuthenticated);
+  const isAuthenticated = useSignal(rIsAuthenticated);
 
   if (!isAuthenticated) {
     return <Navigate to="/auth/register" />;

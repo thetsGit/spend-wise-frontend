@@ -2,8 +2,9 @@ import { useEffect } from "react";
 import { useNavigate, useSearch } from "@tanstack/react-router";
 
 import {
+  authenticateStates as rAuthenticateStates,
   exchangeToken,
-  exchangeError as reactiveExchangeError,
+  verifyWithServer,
 } from "@/states/oauth";
 
 import { useSignal } from "@/hooks";
@@ -11,39 +12,33 @@ import { useSignal } from "@/hooks";
 export function AuthCallbackView() {
   const navigate = useNavigate();
 
-  const exchangeError = useSignal(reactiveExchangeError);
+  const authenticateStates = useSignal(rAuthenticateStates);
 
   const search = useSearch({
     from: "/auth/callback",
   });
 
+  const code = search["code"];
+
+  const error = (() => {
+    const oauthCallbackError = search["error"];
+
+    if (oauthCallbackError)
+      return `Authentication failed: ${oauthCallbackError}`;
+
+    if (!code) return "No authorization code received";
+
+    return authenticateStates.error;
+  })();
+
   useEffect(() => {
-    const code = search["code"];
     if (code) {
-      exchangeToken(code);
+      // Immediately trigger token exchange and server verification
+      exchangeToken(code, verifyWithServer);
     }
   }, []);
 
-  const code = search["code"];
-  const error = search["error"] || exchangeError;
-
-  let eMessage = "";
-
   if (error) {
-    eMessage = `Authentication failed: ${error}`;
-    // setError(eMessage);
-    console.error(`Authentication failed: ${error}`);
-    return;
-  }
-
-  if (!code) {
-    eMessage = "No authorization code received";
-    // setError(eMessage);
-    console.error("No authorization code received");
-    return;
-  }
-
-  if (eMessage) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">

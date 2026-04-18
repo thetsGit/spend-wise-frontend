@@ -10,11 +10,41 @@ import type {
   SpendingSummary,
 } from "@/types/entities";
 
-import type { GetSpendingParams } from "./types";
+import type {
+  GetSpendingParams,
+  OauthTokenResponse,
+  RegisterOauthResponse,
+} from "./types";
 
 import { appApi } from "./sources";
 
 export const createAppServices = (api: $Fetch = appApi) => {
+  const verifyOauth = () => {
+    type Response = TResponse<RegisterOauthResponse>;
+    let abortController: AbortController;
+
+    const request = async (body: OauthTokenResponse) => {
+      abortController = new AbortController();
+      return api<Response>("/oauth/verify", {
+        method: "POST",
+        signal: abortController.signal,
+        body,
+      });
+    };
+
+    const resolver = (response: Response) => response.data;
+
+    const errorResolver = (response: Response): TErrorData | null => {
+      if (response.status !== "success")
+        return { message: response.message, error: response.error };
+      return null;
+    };
+
+    const abort = () => abortController?.abort();
+
+    return { request, resolver, abort, errorResolver };
+  };
+
   const uploadEmails = () => {
     type Response = TResponse<UploadSummary>;
     let abortController: AbortController;
@@ -143,6 +173,16 @@ export const createAppServices = (api: $Fetch = appApi) => {
   };
 
   return {
+    /**
+     * Auth services
+     */
+
+    verifyOauth,
+
+    /**
+     * Upload services
+     */
+
     uploadEmails,
 
     /**
@@ -164,6 +204,14 @@ export const createAppServices = (api: $Fetch = appApi) => {
 export const appServices = createAppServices();
 
 export const {
+  /**
+   * Auth services
+   */
+  verifyOauth,
+
+  /**
+   * Upload services
+   */
   uploadEmails,
 
   /**

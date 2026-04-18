@@ -20,6 +20,7 @@ export function useRequest<TPayload, TResponse, TResult, TError>(
 
   const pending = data === null && fetching;
 
+  // TODO: check if 'abort' actually working ? might need to use abort from apiFn (not a new one)
   const abort = useCallback(() => {
     abortControllerRef.current?.abort();
   }, []);

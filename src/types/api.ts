@@ -10,7 +10,7 @@ export type ApiRequest<TPayload, TRes, TResult = TRes, TError = unknown> = {
   request: (payload: TPayload) => Promise<TRes>;
   resolver: (response: TRes) => TResult;
   errorResolver: (response: TRes) => TError;
-  abort: () => void;
+  abort: VoidFunction;
 };
 
 export type TErrorData = {

@@ -2,13 +2,13 @@ import type { $Fetch } from "ofetch";
 
 import type { TErrorData } from "@/types/api";
 
-import {
-  isOauthTokenErrorResponse,
-  type OauthTokenErrorResponse,
-  type OauthTokenResponse,
-} from "@/types/oauth";
+import type {
+  OAuthTokenExchangeParams,
+  OauthTokenErrorResponse,
+  OauthTokenResponse,
+} from "./types";
 
-import type { OAuthTokenExchangeParams } from "./types";
+import { isOauthTokenErrorResponse } from "./types";
 
 import { oauthApi } from "./sources";
 
