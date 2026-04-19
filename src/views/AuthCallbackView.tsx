@@ -1,8 +1,8 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useNavigate, useSearch } from "@tanstack/react-router";
 
 import {
-  authenticateStates as rAuthenticateStates,
+  loginStates as rLoginStates,
   exchangeToken,
   verifyWithServer,
 } from "@/states/oauth";
@@ -12,7 +12,9 @@ import { useSignal } from "@/hooks";
 export function AuthCallbackView() {
   const navigate = useNavigate();
 
-  const authenticateStates = useSignal(rAuthenticateStates);
+  const loginStates = useSignal(rLoginStates);
+
+  const hasExchanged = useRef(false);
 
   const search = useSearch({
     from: "/auth/callback",
@@ -28,13 +30,14 @@ export function AuthCallbackView() {
 
     if (!code) return "No authorization code received";
 
-    return authenticateStates.error;
+    return loginStates.error;
   })();
 
   useEffect(() => {
-    if (code) {
+    if (code && !hasExchanged.current) {
       // Immediately trigger token exchange and server verification
       exchangeToken(code, verifyWithServer);
+      hasExchanged.current = true;
     }
   }, []);
 
