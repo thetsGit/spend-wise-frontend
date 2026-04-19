@@ -10,7 +10,7 @@ import type {
 
 import { isOauthTokenErrorResponse } from "./types";
 
-import { oauthApi } from "./sources";
+import { oauthApi } from "./sources/oauthApi";
 
 export const createOAuthServices = (api: $Fetch = oauthApi) => {
   const exchangeToken = () => {

@@ -8,6 +8,7 @@ import type {
   SaaSDiscoverySummary,
   Spending,
   SpendingSummary,
+  User,
 } from "@/types/entities";
 
 import type {
@@ -16,7 +17,7 @@ import type {
   RegisterOauthResponse,
 } from "./types";
 
-import { appApi } from "./sources";
+import { appApi } from "./sources/appApi";
 
 export const createAppServices = (api: $Fetch = appApi) => {
   const verifyOauth = () => {
@@ -29,6 +30,31 @@ export const createAppServices = (api: $Fetch = appApi) => {
         method: "POST",
         signal: abortController.signal,
         body,
+      });
+    };
+
+    const resolver = (response: Response) => response.data;
+
+    const errorResolver = (response: Response): TErrorData | null => {
+      if (response.status !== "success")
+        return { message: response.message, error: response.error };
+      return null;
+    };
+
+    const abort = () => abortController?.abort();
+
+    return { request, resolver, abort, errorResolver };
+  };
+
+  const logout = () => {
+    type Response = TResponse<never>;
+    let abortController: AbortController;
+
+    const request = async () => {
+      abortController = new AbortController();
+      return api<Response>("/auth/logout", {
+        method: "POST",
+        signal: abortController.signal,
       });
     };
 
@@ -172,12 +198,38 @@ export const createAppServices = (api: $Fetch = appApi) => {
     return { request, resolver, abort, errorResolver };
   };
 
+  const getProfile = () => {
+    type Response = TResponse<User>;
+    let abortController: AbortController;
+
+    const request = () => {
+      abortController = new AbortController();
+      return api<Response>("/users/me", {
+        method: "GET",
+        signal: abortController.signal,
+      });
+    };
+
+    const resolver = (response: Response) => response.data;
+
+    const errorResolver = (response: Response): TErrorData | null => {
+      if (response.status !== "success")
+        return { message: response.message, error: response.error };
+      return null;
+    };
+
+    const abort = () => abortController?.abort();
+
+    return { request, resolver, abort, errorResolver };
+  };
+
   return {
     /**
      * Auth services
      */
 
     verifyOauth,
+    logout,
 
     /**
      * Upload services
@@ -198,6 +250,11 @@ export const createAppServices = (api: $Fetch = appApi) => {
 
     getSpendingSummary,
     getSpending,
+
+    /**
+     * Profile
+     */
+    getProfile,
   };
 };
 
@@ -208,6 +265,7 @@ export const {
    * Auth services
    */
   verifyOauth,
+  logout,
 
   /**
    * Upload services
@@ -227,6 +285,11 @@ export const {
 
   getSpendingSummary,
   getSpending,
+
+  /**
+   * Profile services
+   */
+  getProfile,
 } = appServices;
 
 export type TAppServices = ReturnType<typeof createAppServices>;

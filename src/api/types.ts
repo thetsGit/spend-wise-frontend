@@ -29,13 +29,17 @@ export type OauthTokenErrorResponse = {
   error_description: string;
 };
 
+export type RegisterOauthResponse = {
+  user: User;
+  session_token: string;
+};
+
+/**
+ * Predicates
+ */
+
 export function isOauthTokenErrorResponse(
   res: OauthTokenResponse | OauthTokenErrorResponse,
 ): res is OauthTokenErrorResponse {
   return "error" in res && "error_description" in res;
 }
-
-export type RegisterOauthResponse = {
-  user: User;
-  session_token: string;
-};

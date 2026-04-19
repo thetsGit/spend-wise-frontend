@@ -13,10 +13,14 @@ import {
 } from "@/constants/oauth";
 
 import { exchangeToken as exchangeTokenService } from "@/api/oauth-services";
-import { verifyOauth } from "@/api/app-services";
+import { verifyOauth, logout as logoutService } from "@/api/app-services";
 
 type AccessToken = string;
 type CodeVerifier = string;
+
+/**
+ * Persist layer
+ */
 
 const ACCESS_TOKEN_KEY = "access-token-key";
 const CODE_VERIFIER_KEY = "code-verifier-key";
@@ -55,6 +59,10 @@ export const exchanging = signal(false);
 export const serverVerificationError = signal<string>();
 export const verifyingWithServer = signal(false);
 
+// logout states
+export const logoutError = signal<string>();
+export const loggingOut = signal(false);
+
 /**
  * Computed/s
  */
@@ -71,9 +79,14 @@ export const serverVerificationStates = computed(() => ({
   loading: verifyingWithServer.value,
 }));
 
-export const authenticateStates = computed(() => ({
+export const loginStates = computed(() => ({
   error: exchangeError.value || serverVerificationError.value,
   loading: exchanging.value || verifyingWithServer.value,
+}));
+
+export const logoutStates = computed(() => ({
+  error: logoutError.value,
+  loading: loggingOut.value,
 }));
 
 /**
@@ -93,6 +106,9 @@ export const setCodeVerifier = (newCodeVerifier: CodeVerifier = "") => {
  */
 
 export const redirect = async () => {
+  // Flush access token
+  accessToken.value = "";
+
   const { code_challenge, code_challenge_method, code_verifier } =
     await pkceChallenge();
 
@@ -146,7 +162,7 @@ export const exchangeToken = async (
     const errorData = errorResolver(response);
     if (errorData) {
       exchangeError.value = errorData.message;
-      return;
+      return Promise.reject(errorData);
     }
 
     const resolved = resolver(response) as OauthTokenResponse;
@@ -156,9 +172,10 @@ export const exchangeToken = async (
 
     // Flush old 'code_verifier'
     setCodeVerifier();
-  } catch (err) {
+  } catch (e) {
     exchangeError.value =
-      err instanceof Error ? err.message : "Failed to exchange code";
+      e instanceof Error ? e.message : "Failed to exchange code";
+    return Promise.reject(e);
   } finally {
     exchanging.value = false;
   }
@@ -179,18 +196,47 @@ export const verifyWithServer = async (payload: OauthTokenResponse) => {
     const errorData = errorResolver(response);
     if (errorData) {
       serverVerificationError.value = errorData.message;
-      return;
+      return Promise.reject(errorData);
     }
 
     const resolved = resolver(response);
 
     // Set new access token
     setAccessToken(resolved?.session_token);
-  } catch (err) {
+  } catch (e) {
     serverVerificationError.value =
-      err instanceof Error ? err.message : "Failed to verify with server";
+      e instanceof Error ? e.message : "Failed to verify with server";
+    return Promise.reject(e);
   } finally {
     verifyingWithServer.value = false;
+  }
+};
+
+export const logout = async (isForced = true) => {
+  batch(() => {
+    logoutError.value = "";
+    loggingOut.value = true;
+  });
+
+  try {
+    const { request, errorResolver } = logoutService();
+
+    const response = await request();
+
+    const errorData = errorResolver(response);
+    if (errorData) {
+      serverVerificationError.value = errorData.message;
+      return Promise.reject(errorData);
+    }
+  } catch (e) {
+    logoutError.value = e instanceof Error ? e.message : "Failed to logout";
+    return Promise.reject(e);
+  } finally {
+    batch(() => {
+      // Flush access token despite api call result
+      if (isForced) accessToken.value = "";
+      loggingOut.value = false;
+    });
   }
 };
 

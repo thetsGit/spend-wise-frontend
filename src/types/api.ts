@@ -1,7 +1,7 @@
 export type TResponse<T> = {
   data?: T;
   status: "success" | "error";
-  statusCode: number;
+  status_code: number;
   message: string;
   error?: string;
 };

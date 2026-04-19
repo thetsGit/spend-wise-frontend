@@ -9,34 +9,41 @@ import {
   getSaaSDiscoverySummary,
 } from "@/api/app-services";
 
-import { UploadSection } from "@/components/blocks";
+import { profile as rProfile } from "@/states/profile";
+import { logout } from "@/states/oauth";
+
+import { useSignal } from "@/hooks";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 
+import { UploadSection } from "@/components/blocks";
+
 export function HomeView() {
+  const profile = useSignal(rProfile);
+
   const navigate = useNavigate();
 
   const spending = useRequest(getSpendingSummary);
   const saas = useRequest(getSaaSDiscoverySummary);
 
   useEffect(() => {
-    spending.execute(undefined);
-    saas.execute(undefined);
+    spending.execute(null);
+    saas.execute(null);
   }, []);
 
   const refreshData = () => {
-    spending.execute(undefined);
-    saas.execute(undefined);
+    spending.execute(null);
+    saas.execute(null);
   };
 
   return (
     <div className="space-y-6">
       <div>
         <h2 className="text-2xl font-semibold tracking-tight text-stone-900">
-          Dashboard
+          Dashboard {profile.data?.oauth_name}
         </h2>
         <p className="text-sm text-muted-foreground">
           Upload emails to analyze spending and discover SaaS subscriptions
@@ -44,6 +51,8 @@ export function HomeView() {
       </div>
 
       <UploadSection onSuccess={refreshData} />
+
+      <Button onClick={() => logout()}>logout</Button>
 
       <Separator />
 
