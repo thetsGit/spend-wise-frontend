@@ -12,7 +12,7 @@ import { isAuthenticated as rIsAuthenticated } from "@/states/oauth";
 
 import { useSignal } from "@/hooks";
 
-import { AppLayout, type NavItem } from "@/components/layout";
+import { AppLayout, type NavItem } from "@/components/layouts";
 
 import type { FileRouteTypes } from "@/routeTree.gen";
 

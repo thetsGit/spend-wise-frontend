@@ -1,7 +1,8 @@
+import { toast } from "sonner";
 import pkceChallenge from "pkce-challenge";
 import { batch, computed, signal } from "@preact/signals-core";
 
-import type { OauthTokenResponse } from "@/api/types";
+import { isFetchError } from "@/types/api";
 
 import {
   OAUTH_AUTH_URL,
@@ -11,6 +12,8 @@ import {
   OAUTH_REDIRECT_URI,
   OAUTH_SCOPES,
 } from "@/constants/oauth";
+
+import type { OauthTokenErrorResponse, OauthTokenResponse } from "@/api/types";
 
 import { exchangeToken as exchangeTokenService } from "@/api/oauth-services";
 import { verifyOauth, logout as logoutService } from "@/api/app-services";
@@ -147,9 +150,9 @@ export const exchangeToken = async (
     return;
   }
 
-  try {
-    const { request, resolver, errorResolver } = exchangeTokenService();
+  const { request, resolver, errorResolver } = exchangeTokenService();
 
+  try {
     const response = await request({
       client_id: OAUTH_CLIENT_ID,
       client_secret: OAUTH_CLIENT_SECRET,
@@ -159,12 +162,6 @@ export const exchangeToken = async (
       redirect_uri: OAUTH_REDIRECT_URI,
     });
 
-    const errorData = errorResolver(response);
-    if (errorData) {
-      exchangeError.value = errorData.message;
-      return Promise.reject(errorData);
-    }
-
     const resolved = resolver(response) as OauthTokenResponse;
 
     // Call success callback
@@ -173,8 +170,16 @@ export const exchangeToken = async (
     // Flush old 'code_verifier'
     setCodeVerifier();
   } catch (e) {
-    exchangeError.value =
-      e instanceof Error ? e.message : "Failed to exchange code";
+    if (isFetchError(e)) {
+      const errorData = errorResolver(e.data as OauthTokenErrorResponse);
+      if (errorData) {
+        exchangeError.value = errorData.message;
+      }
+    } else {
+      exchangeError.value =
+        e instanceof Error ? e.message : "Failed to exchange code";
+    }
+
     return Promise.reject(e);
   } finally {
     exchanging.value = false;
@@ -213,6 +218,12 @@ export const verifyWithServer = async (payload: OauthTokenResponse) => {
 };
 
 export const logout = async (isForced = true) => {
+  const onSuccess = () => {
+    // Flush access token
+    accessToken.value = "";
+    toast.success("Logout successfully");
+  };
+
   batch(() => {
     logoutError.value = "";
     loggingOut.value = true;
@@ -228,13 +239,17 @@ export const logout = async (isForced = true) => {
       serverVerificationError.value = errorData.message;
       return Promise.reject(errorData);
     }
+
+    if (!isForced) {
+      onSuccess();
+    }
   } catch (e) {
     logoutError.value = e instanceof Error ? e.message : "Failed to logout";
     return Promise.reject(e);
   } finally {
     batch(() => {
-      // Flush access token despite api call result
-      if (isForced) accessToken.value = "";
+      // Run success effect despite api call result
+      if (isForced) onSuccess();
       loggingOut.value = false;
     });
   }

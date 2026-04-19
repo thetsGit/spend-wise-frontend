@@ -1,3 +1,5 @@
+import { FetchError } from "ofetch";
+
 export type TResponse<T> = {
   data?: T;
   status: "success" | "error";
@@ -17,3 +19,11 @@ export type TErrorData = {
   error?: string;
   message: string;
 };
+
+/**
+ * Predicates
+ */
+
+export function isFetchError<T = unknown>(e: unknown): e is FetchError<T> {
+  return e instanceof FetchError;
+}
