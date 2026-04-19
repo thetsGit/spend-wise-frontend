@@ -1,17 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 
-import { redirect } from "@/states/oauth";
-
-import { Button } from "@/components/ui/button";
+import { RegisterView } from "@/views/RegisterView";
 
 export const Route = createFileRoute("/auth/register")({
-  component: RouteComponent,
+  component: RegisterView,
 });
-
-function RouteComponent() {
-  return (
-    <div>
-      <Button onClick={redirect}>Continue with google</Button>
-    </div>
-  );
-}
