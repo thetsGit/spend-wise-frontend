@@ -1,8 +1,14 @@
 import { type ReactNode } from "react";
-import type { LucideIcon } from "lucide-react";
+import { type LucideIcon } from "lucide-react";
+
+import { profile as rProfile } from "@/states/profile";
+
+import { useSignal } from "@/hooks";
 
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
+
+import { UserMenu } from "@/components/blocks/UserMenu";
 
 export type NavItem<T extends string> = {
   key: T;
@@ -23,6 +29,8 @@ export const AppLayout = <T extends string>({
   navItems,
   onSelect,
 }: Props<T>) => {
+  const profile = useSignal(rProfile);
+
   return (
     <div className="flex h-screen">
       <aside className="flex w-56 flex-col border-r bg-white">
@@ -38,7 +46,6 @@ export const AppLayout = <T extends string>({
         <nav className="flex-1 space-y-1 p-3">
           {navItems.map((item) => {
             const Icon = item.icon;
-
             return (
               <Button
                 key={item.key}
@@ -57,9 +64,7 @@ export const AppLayout = <T extends string>({
           })}
         </nav>
         <Separator />
-        <div className="p-4 text-xs text-muted-foreground">
-          Powered by AI analysis
-        </div>
+        {profile.data && <UserMenu profile={profile.data} />}
       </aside>
       <main className="flex-1 overflow-y-auto bg-emerald-50/30 p-6">
         {children}

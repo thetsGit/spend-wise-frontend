@@ -10,7 +10,6 @@ import {
 } from "@/api/app-services";
 
 import { profile as rProfile } from "@/states/profile";
-import { logout } from "@/states/oauth";
 
 import { useSignal } from "@/hooks";
 
@@ -51,8 +50,6 @@ export function HomeView() {
       </div>
 
       <UploadSection onSuccess={refreshData} />
-
-      <Button onClick={() => logout()}>logout</Button>
 
       <Separator />
 

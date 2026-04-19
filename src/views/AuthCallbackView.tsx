@@ -69,10 +69,6 @@ export function AuthCallbackView() {
               <p className="mt-2 text-sm text-muted-foreground">
                 Hang tight, this only takes a moment.
               </p>
-              <div className="mt-6 w-full space-y-2">
-                <div className="h-2 w-full animate-pulse rounded bg-muted" />
-                <div className="h-2 w-5/6 animate-pulse rounded bg-muted" />
-              </div>
             </>
           )}
         </CardContent>
