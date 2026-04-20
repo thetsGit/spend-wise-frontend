@@ -17,6 +17,7 @@ type Props = {
   onSuccess: VoidFunction;
 };
 
+// TODO: need to make to be a pure UI component (extract logics as hooks), just accept pure props here (to be reusable)
 export const UploadSection: FC<Props> = ({ onSuccess }) => {
   const [dragging, setDragging] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);

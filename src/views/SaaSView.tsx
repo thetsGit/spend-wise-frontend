@@ -22,6 +22,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 
+import { SectionHeader } from "@/components/listings";
+
 const formatCost = (cycle: string, cost?: number | null) => {
   if (cost !== 0 && !cost) return "No pricing data";
   const parsed = `$${cost.toFixed(2)}`;
@@ -112,7 +114,12 @@ export function SaaSView() {
       {Boolean(list.error) && (
         <Card className="border-red-200 bg-red-50">
           <CardContent className="flex items-center justify-between pt-6">
-            <p className="text-sm text-red-700">{String(list.error)}</p>
+            {list.error instanceof Object && "message" in list.error && (
+              <p className="text-sm text-red-700">
+                {String(list.error.message)}
+              </p>
+            )}
+
             <Button
               variant="outline"
               size="sm"
@@ -124,80 +131,86 @@ export function SaaSView() {
         </Card>
       )}
 
-      {/* SaaS Tools List */}
-      <div>
-        <h3 className="text-lg font-semibold text-stone-900">Detected Tools</h3>
-        <p className="text-sm text-muted-foreground">
-          {list.data?.length || 0} subscriptions identified from email signals
-        </p>
-      </div>
+      {Boolean(list.data) && (
+        <>
+          {/* SaaS Tools List */}
+          <SectionHeader
+            title="Detected Tools"
+            description={`${list.data?.length || 0} subscriptions identified from email
+            signals`}
+          />
 
-      {list.pending ? (
-        <div className="space-y-3">
-          {Array.from({ length: 5 }).map((_, i) => (
-            <div key={i} className="h-20 animate-pulse rounded-lg bg-muted" />
-          ))}
-        </div>
-      ) : !list.data?.length ? (
-        <Card>
-          <CardContent className="py-16 text-center text-sm text-muted-foreground">
-            No SaaS tools detected.
-          </CardContent>
-        </Card>
-      ) : (
-        <div className="space-y-3">
-          {list.data.map((item) => (
-            <Card
-              key={item.id}
-              className="transition-all hover:shadow-md hover:border-emerald-200"
-            >
-              <CardContent className="flex items-center justify-between py-4">
-                <div className="flex items-center gap-4">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-emerald-50">
-                    <Package size={18} className="text-emerald-600" />
-                  </div>
-                  <div>
-                    <h4 className="font-semibold text-stone-900">
-                      {item.product_name}
-                    </h4>
-                    <div className="mt-1 flex flex-wrap gap-2">
-                      <Badge
-                        variant="outline"
-                        className={cn(
-                          "font-normal",
-                          SIGNAL_STYLES[item.signal_type],
-                        )}
-                      >
-                        {SIGNAL_TYPES_LABELS[item.signal_type] ||
-                          item.signal_type}
-                      </Badge>
-                      <Badge variant="outline" className="font-normal">
-                        {BILLING_CYCLES_LABELS[item.billing_cycle] ||
-                          item.billing_cycle}
-                      </Badge>
-                    </div>
-                  </div>
-                </div>
-                <div className="flex items-center gap-3">
-                  <div className="text-right">
-                    <p className="text-lg font-bold text-emerald-700">
-                      {formatCost(item.billing_cycle, item.estimated_cost)}
-                    </p>
-                  </div>
-                  <Badge
-                    variant="secondary"
-                    className={cn(
-                      "font-normal",
-                      CONFIDENCE_STYLES[item.confidence],
-                    )}
-                  >
-                    {item.confidence}
-                  </Badge>
-                </div>
+          {list.pending ? (
+            <div className="space-y-3">
+              {Array.from({ length: 5 }).map((_, i) => (
+                <div
+                  key={i}
+                  className="h-20 animate-pulse rounded-lg bg-muted"
+                />
+              ))}
+            </div>
+          ) : !list.data?.length ? (
+            <Card>
+              <CardContent className="py-16 text-center text-sm text-muted-foreground">
+                No SaaS tools detected.
               </CardContent>
             </Card>
-          ))}
-        </div>
+          ) : (
+            <div className="space-y-3">
+              {list.data.map((item) => (
+                <Card
+                  key={item.id}
+                  className="transition-all hover:shadow-md hover:border-emerald-200"
+                >
+                  <CardContent className="flex items-center justify-between py-4">
+                    <div className="flex items-center gap-4">
+                      <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-emerald-50">
+                        <Package size={18} className="text-emerald-600" />
+                      </div>
+                      <div>
+                        <h4 className="font-semibold text-stone-900">
+                          {item.product_name}
+                        </h4>
+                        <div className="mt-1 flex flex-wrap gap-2">
+                          <Badge
+                            variant="outline"
+                            className={cn(
+                              "font-normal",
+                              SIGNAL_STYLES[item.signal_type],
+                            )}
+                          >
+                            {SIGNAL_TYPES_LABELS[item.signal_type] ||
+                              item.signal_type}
+                          </Badge>
+                          <Badge variant="outline" className="font-normal">
+                            {BILLING_CYCLES_LABELS[item.billing_cycle] ||
+                              item.billing_cycle}
+                          </Badge>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <div className="text-right">
+                        <p className="text-lg font-bold text-emerald-700">
+                          {formatCost(item.billing_cycle, item.estimated_cost)}
+                        </p>
+                      </div>
+                      <Badge
+                        variant="secondary"
+                        className={cn(
+                          "font-normal",
+                          CONFIDENCE_STYLES[item.confidence],
+                        )}
+                      >
+                        {item.confidence}
+                      </Badge>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
+        </>
       )}
     </div>
   );

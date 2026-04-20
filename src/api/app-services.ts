@@ -97,6 +97,31 @@ export const createAppServices = (api: $Fetch = appApi) => {
     return { request, resolver, abort, errorResolver };
   };
 
+  const syncGmails = () => {
+    type Response = TResponse<UploadSummary>;
+    let abortController: AbortController;
+
+    const request = async () => {
+      abortController = new AbortController();
+      return api<Response>("/gmails/sync", {
+        method: "POST",
+        signal: abortController.signal,
+      });
+    };
+
+    const resolver = (response: Response) => response.data;
+
+    const errorResolver = (response: Response): TErrorData | null => {
+      if (response.status !== "success")
+        return { message: response.message, error: response.error };
+      return null;
+    };
+
+    const abort = () => abortController?.abort();
+
+    return { request, resolver, abort, errorResolver };
+  };
+
   const getSaaSDiscoveries = () => {
     type Response = TResponse<SaaSDiscovery[]>;
     let abortController: AbortController;
@@ -232,10 +257,11 @@ export const createAppServices = (api: $Fetch = appApi) => {
     logout,
 
     /**
-     * Upload services
+     * Emails services
      */
 
     uploadEmails,
+    syncGmails,
 
     /**
      * SaaS services
@@ -268,9 +294,10 @@ export const {
   logout,
 
   /**
-   * Upload services
+   * Emails services
    */
   uploadEmails,
+  syncGmails,
 
   /**
    * SaaS services

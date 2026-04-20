@@ -18,7 +18,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 
-import { UploadSection } from "@/components/blocks";
+import { UploadSection, GmailSyncSection } from "@/components/blocks";
+import { SectionHeader } from "@/components/listings";
 
 export function HomeView() {
   const profile = useSignal(rProfile);
@@ -38,103 +39,124 @@ export function HomeView() {
     saas.execute(null);
   };
 
+  const firstName = profile.data?.oauth_name?.split(" ")[0];
+
   return (
     <div className="space-y-6">
       <div>
         <h2 className="text-2xl font-semibold tracking-tight text-stone-900">
-          Dashboard {profile.data?.oauth_name}
+          Welcome back{profile.data?.oauth_name ? `, ${firstName}` : ""}
         </h2>
         <p className="text-sm text-muted-foreground">
-          Upload emails to analyze spending and discover SaaS subscriptions
+          Here's what we found in your inbox
         </p>
       </div>
 
-      <UploadSection onSuccess={refreshData} />
+      {/* Overview stats */}
+      <section className="space-y-3">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <Card
+            className="cursor-pointer transition-all hover:shadow-md hover:border-emerald-200"
+            onClick={() => navigate({ to: "/spending" })}
+          >
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground">
+                Spending
+              </CardTitle>
+              <CreditCard size={18} className="text-emerald-600" />
+            </CardHeader>
+            <CardContent>
+              {spending.pending ? (
+                <div className="h-8 w-24 animate-pulse rounded bg-muted" />
+              ) : (
+                <>
+                  <p className="text-2xl font-bold text-stone-900">
+                    {spending.data
+                      ? `$${spending.data.total_spend.toFixed(2)}`
+                      : "—"}
+                  </p>
+                  <div className="mt-2 flex items-center gap-2">
+                    <Badge
+                      variant="secondary"
+                      className="bg-emerald-50 text-emerald-700"
+                    >
+                      <TrendingUp size={12} className="mr-1" />
+                      {spending.data?.total_count || 0} transactions
+                    </Badge>
+                    <Badge
+                      variant="secondary"
+                      className="bg-emerald-50 text-emerald-700"
+                    >
+                      <Layers size={12} className="mr-1" />
+                      {spending.data?.by_category?.length || 0} categories
+                    </Badge>
+                  </div>
+                </>
+              )}
+              <Button
+                variant="link"
+                className="mt-3 h-auto p-0 text-emerald-700"
+              >
+                View details →
+              </Button>
+            </CardContent>
+          </Card>
+
+          <Card
+            className="cursor-pointer transition-all hover:shadow-md hover:border-emerald-200"
+            onClick={() => navigate({ to: "/saas" })}
+          >
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground">
+                SaaS Discovery
+              </CardTitle>
+              <Search size={18} className="text-emerald-600" />
+            </CardHeader>
+            <CardContent>
+              {saas.pending ? (
+                <div className="h-8 w-24 animate-pulse rounded bg-muted" />
+              ) : (
+                <>
+                  <p className="text-2xl font-bold text-stone-900">
+                    {saas.data
+                      ? `$${saas.data.total_monthly_spend.toFixed(2)}/mo`
+                      : "—"}
+                  </p>
+                  <div className="mt-2">
+                    <Badge
+                      variant="secondary"
+                      className="bg-emerald-50 text-emerald-700"
+                    >
+                      <Layers size={12} className="mr-1" />
+                      {saas.data?.total_tools_found || 0} tools detected
+                    </Badge>
+                  </div>
+                </>
+              )}
+              <Button
+                variant="link"
+                className="mt-3 h-auto p-0 text-emerald-700"
+              >
+                View details →
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+      </section>
 
       <Separator />
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <Card
-          className="cursor-pointer transition-all hover:shadow-md hover:border-emerald-200"
-          onClick={() => navigate({ to: "/spending" })}
-        >
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Spending
-            </CardTitle>
-            <CreditCard size={18} className="text-emerald-600" />
-          </CardHeader>
-          <CardContent>
-            {spending.pending ? (
-              <div className="h-8 w-24 animate-pulse rounded bg-muted" />
-            ) : (
-              <>
-                <p className="text-2xl font-bold text-stone-900">
-                  {spending.data
-                    ? `$${spending.data.total_spend.toFixed(2)}`
-                    : "—"}
-                </p>
-                <div className="mt-2 flex items-center gap-2">
-                  <Badge
-                    variant="secondary"
-                    className="bg-emerald-50 text-emerald-700"
-                  >
-                    <TrendingUp size={12} className="mr-1" />
-                    {spending.data?.total_count || 0} transactions
-                  </Badge>
-                  <Badge
-                    variant="secondary"
-                    className="bg-emerald-50 text-emerald-700"
-                  >
-                    <Layers size={12} className="mr-1" />
-                    {spending.data?.by_category?.length || 0} categories
-                  </Badge>
-                </div>
-              </>
-            )}
-            <Button variant="link" className="mt-3 h-auto p-0 text-emerald-700">
-              View details →
-            </Button>
-          </CardContent>
-        </Card>
-
-        <Card
-          className="cursor-pointer transition-all hover:shadow-md hover:border-emerald-200"
-          onClick={() => navigate({ to: "/saas" })}
-        >
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              SaaS Discovery
-            </CardTitle>
-            <Search size={18} className="text-emerald-600" />
-          </CardHeader>
-          <CardContent>
-            {saas.pending ? (
-              <div className="h-8 w-24 animate-pulse rounded bg-muted" />
-            ) : (
-              <>
-                <p className="text-2xl font-bold text-stone-900">
-                  {saas.data
-                    ? `$${saas.data.total_monthly_spend.toFixed(2)}/mo`
-                    : "—"}
-                </p>
-                <div>
-                  <Badge
-                    variant="secondary"
-                    className="mt-2 bg-emerald-50 text-emerald-700"
-                  >
-                    <Layers size={12} className="mr-1" />
-                    {saas.data?.total_tools_found || 0} tools detected
-                  </Badge>
-                </div>
-              </>
-            )}
-            <Button variant="link" className="mt-3 h-auto p-0 text-emerald-700">
-              View details →
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
+      {/* Import section */}
+      <section className="space-y-3">
+        <SectionHeader
+          title="Import emails"
+          description="Sync from Gmail automatically, or upload a file export"
+        />
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+          <GmailSyncSection onSuccess={refreshData} />
+          <UploadSection onSuccess={refreshData} />
+        </div>
+      </section>
     </div>
   );
 }

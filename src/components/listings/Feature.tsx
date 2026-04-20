@@ -1,4 +1,4 @@
-export function Feature({
+export const Feature = ({
   icon,
   title,
   description,
@@ -6,7 +6,7 @@ export function Feature({
   icon: React.ReactNode;
   title: string;
   description: string;
-}) {
+}) => {
   return (
     <div className="flex items-start gap-3">
       <div className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-emerald-50">
@@ -18,4 +18,4 @@ export function Feature({
       </div>
     </div>
   );
-}
+};

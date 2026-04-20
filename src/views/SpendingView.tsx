@@ -35,6 +35,8 @@ import {
   TableRow,
 } from "@/components/ui/table";
 
+import { SectionHeader } from "@/components/listings";
+
 const formatCurrency = (amount: number | null, currency: string) =>
   amount !== null ? `${currency} ${amount.toFixed(2)}` : "—";
 
@@ -158,7 +160,12 @@ export function SpendingView() {
       {Boolean(list.error) && (
         <Card className="border-red-200 bg-red-50">
           <CardContent className="flex items-center justify-between pt-6">
-            <p className="text-sm text-red-700">{String(list.error)}</p>
+            {list.error instanceof Object && "message" in list.error && (
+              <p className="text-sm text-red-700">
+                {String(list.error.message)}
+              </p>
+            )}
+
             <Button variant="outline" size="sm" onClick={fetchData}>
               Retry
             </Button>
@@ -166,118 +173,131 @@ export function SpendingView() {
         </Card>
       )}
 
-      {/* Table with inline filters */}
-      <Card>
-        <CardContent className="p-0">
-          {/* Filters inside table card */}
-          <div className="flex flex-wrap items-end justify-end gap-3 p-4">
-            <div className="w-44">
-              <Select value={category} onValueChange={setCategory}>
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Category" />
-                </SelectTrigger>
-                <SelectContent>
-                  {CATEGORIES.map((c) => (
-                    <SelectItem key={c.value} value={c.value}>
-                      {c.label}
-                    </SelectItem>
+      {Boolean(list.data) && (
+        <>
+          {/* SaaS Tools List */}
+          <SectionHeader
+            title="Spendings"
+            description={`${list.data?.length || 0} transactions detected from email signals`}
+          />
+
+          {/* Table with inline filters */}
+          <Card>
+            <CardContent className="p-0">
+              {/* Filters inside table card */}
+              <div className="flex flex-wrap items-end justify-end gap-3 p-4">
+                <div className="w-44">
+                  <Select value={category} onValueChange={setCategory}>
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Category" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {CATEGORIES.map((c) => (
+                        <SelectItem key={c.value} value={c.value}>
+                          {c.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="w-36">
+                  <Input
+                    type="date"
+                    value={startDate}
+                    onChange={(e) => setStartDate(e.target.value)}
+                    placeholder="Start date"
+                  />
+                </div>
+                <div className="w-36">
+                  <Input
+                    type="date"
+                    value={endDate}
+                    onChange={(e) => setEndDate(e.target.value)}
+                    placeholder="End date"
+                  />
+                </div>
+                {hasFilters && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={clearFilters}
+                    className="text-muted-foreground"
+                  >
+                    <X size={16} />
+                  </Button>
+                )}
+              </div>
+
+              <Separator />
+
+              {/* Table content */}
+              {list.pending ? (
+                <div className="space-y-3 p-6">
+                  {Array.from({ length: 5 }).map((_, i) => (
+                    <div
+                      key={i}
+                      className="h-12 animate-pulse rounded bg-muted"
+                    />
                   ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="w-36">
-              <Input
-                type="date"
-                value={startDate}
-                onChange={(e) => setStartDate(e.target.value)}
-                placeholder="Start date"
-              />
-            </div>
-            <div className="w-36">
-              <Input
-                type="date"
-                value={endDate}
-                onChange={(e) => setEndDate(e.target.value)}
-                placeholder="End date"
-              />
-            </div>
-            {hasFilters && (
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={clearFilters}
-                className="text-muted-foreground"
-              >
-                <X size={16} />
-              </Button>
-            )}
-          </div>
-
-          <Separator />
-
-          {/* Table content */}
-          {list.pending ? (
-            <div className="space-y-3 p-6">
-              {Array.from({ length: 5 }).map((_, i) => (
-                <div key={i} className="h-12 animate-pulse rounded bg-muted" />
-              ))}
-            </div>
-          ) : !list.data?.length ? (
-            <div className="py-16 text-center text-sm text-muted-foreground">
-              No transactions found.
-            </div>
-          ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Merchant</TableHead>
-                  <TableHead>Amount</TableHead>
-                  <TableHead>Category</TableHead>
-                  <TableHead>Date</TableHead>
-                  <TableHead>Confidence</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {list.data.map((item) => (
-                  <TableRow key={item.id}>
-                    <TableCell className="font-medium">
-                      {item.merchant}
-                    </TableCell>
-                    <TableCell>
-                      {formatCurrency(item.amount, item.currency)}
-                    </TableCell>
-                    <TableCell>
-                      <Badge
-                        variant="outline"
-                        className={cn(
-                          "font-normal",
-                          CATEGORY_STYLES[item.category],
-                        )}
-                      >
-                        {item.category.replace("_", " ")}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-muted-foreground">
-                      {formatDate(item.transaction_date)}
-                    </TableCell>
-                    <TableCell>
-                      <Badge
-                        variant="secondary"
-                        className={cn(
-                          "font-normal",
-                          CONFIDENCE_STYLES[item.confidence],
-                        )}
-                      >
-                        {item.confidence}
-                      </Badge>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          )}
-        </CardContent>
-      </Card>
+                </div>
+              ) : !list.data?.length ? (
+                <div className="py-16 text-center text-sm text-muted-foreground">
+                  No transactions found.
+                </div>
+              ) : (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Merchant</TableHead>
+                      <TableHead>Amount</TableHead>
+                      <TableHead>Category</TableHead>
+                      <TableHead>Date</TableHead>
+                      <TableHead>Confidence</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {list.data.map((item) => (
+                      <TableRow key={item.id}>
+                        <TableCell className="font-medium">
+                          {item.merchant}
+                        </TableCell>
+                        <TableCell>
+                          {formatCurrency(item.amount, item.currency)}
+                        </TableCell>
+                        <TableCell>
+                          <Badge
+                            variant="outline"
+                            className={cn(
+                              "font-normal",
+                              CATEGORY_STYLES[item.category],
+                            )}
+                          >
+                            {item.category.replace("_", " ")}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-muted-foreground">
+                          {formatDate(item.transaction_date)}
+                        </TableCell>
+                        <TableCell>
+                          <Badge
+                            variant="secondary"
+                            className={cn(
+                              "font-normal",
+                              CONFIDENCE_STYLES[item.confidence],
+                            )}
+                          >
+                            {item.confidence}
+                          </Badge>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              )}
+            </CardContent>
+          </Card>
+        </>
+      )}
     </div>
   );
 }
