@@ -45,6 +45,16 @@ export type UploadSummary = {
   total_emails: number;
   inserted: number;
   skipped: number;
+  invalid: number;
   spending_found: number;
   saas_found: number;
+};
+
+export type User = {
+  oauth_id: string;
+  oauth_email: string;
+  oauth_name: string;
+  oauth_picture: string;
+  created_at: string;
+  updated_at: string;
 };

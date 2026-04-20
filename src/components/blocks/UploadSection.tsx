@@ -4,9 +4,11 @@ import { Upload, Loader2 } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 
+import { parseCSV } from "@/helpers/csv";
+
 import { useRequest } from "@/hooks";
 
-import { uploadEmails } from "@/api/upload-services";
+import { uploadEmails } from "@/api/app-services";
 
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -15,37 +17,65 @@ type Props = {
   onSuccess: VoidFunction;
 };
 
+// TODO: need to make to be a pure UI component (extract logics as hooks), just accept pure props here (to be reusable)
 export const UploadSection: FC<Props> = ({ onSuccess }) => {
   const [dragging, setDragging] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const onUploadProcessed = () => {
+    if (fileInputRef?.current) {
+      fileInputRef.current.value = "";
+    }
+  };
 
   const upload = useRequest(uploadEmails, {
     onSuccess: (data) => {
       if (data) {
         toast.success("Upload complete", {
-          description: `${data.inserted} emails processed, ${data.spending_found} transactions, ${data.saas_found} SaaS tools found`,
+          description: `${data.inserted} emails processed, ${data.skipped} skipped, ${data.invalid} invalid, ${data.spending_found} transactions, ${data.saas_found} SaaS tools found`,
         });
         onSuccess();
       }
+
+      onUploadProcessed();
     },
     onError: (err) => {
-      if (fileInputRef?.current) {
-        fileInputRef.current.value = "";
-      }
       toast.error("Upload failed", {
         description: (err as Error).message,
       });
+
+      onUploadProcessed();
     },
   });
 
-  const handleFile = (file: File) => {
-    if (!file.name.endsWith(".json")) {
+  const handleFile = async (file: File) => {
+    if (file.name.endsWith(".json")) {
+      // Serialize json and call API
+      const content = await file.text();
+      upload.execute(content);
+    } else if (file.name.endsWith(".csv")) {
+      // Parse CSV file into JSON and call API
+      const reader = new FileReader();
+      reader.onload = function (e) {
+        const content = e.target?.result;
+        if (typeof content === "string") {
+          try {
+            const result = parseCSV(content);
+            upload.execute(JSON.stringify(result?.records));
+          } catch (e) {
+            toast.error("Invalid csv file", {
+              description: (e as Error).message,
+            });
+          }
+        }
+      };
+      reader.readAsText(file);
+    } else {
       toast.error("Invalid file type", {
-        description: "Please upload a JSON file",
+        description: "Please upload a JSON/CSV file",
       });
       return;
     }
-    upload.execute(file);
   };
 
   const handleDrop = (e: React.DragEvent) => {
@@ -88,7 +118,7 @@ export const UploadSection: FC<Props> = ({ onSuccess }) => {
           <Upload size={28} className="text-emerald-600" />
           <div>
             <p className="text-sm font-medium text-stone-700">
-              Drop your email JSON file here
+              Drop your email JSON/CSV file here
             </p>
             <p className="mt-1 text-xs text-stone-500">or click to browse</p>
           </div>
@@ -110,7 +140,7 @@ export const UploadSection: FC<Props> = ({ onSuccess }) => {
           <input
             ref={fileInputRef}
             type="file"
-            accept=".json"
+            accept=".json,.csv"
             onChange={handleInputChange}
             className="hidden"
           />
@@ -131,6 +161,7 @@ export const UploadSection: FC<Props> = ({ onSuccess }) => {
             <div className="mt-2 flex flex-wrap gap-4 text-xs text-emerald-700">
               <span>{upload.data.total_emails} emails</span>
               <span>{upload.data.inserted} inserted</span>
+              <span>{upload.data.invalid} invalid</span>
               <span>{upload.data.skipped} skipped</span>
               <span>{upload.data.spending_found} transactions</span>
               <span>{upload.data.saas_found} SaaS tools</span>
